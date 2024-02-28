@@ -1,0 +1,7 @@
+<?xml version='1.0'?>
+
+<launch>
+    <!-- Launch Open Loop Controller -->
+    <include file="$(find vehicle_control_pkg)/launch/open_loop_controller.launch" />
+
+</launch>

@@ -1,0 +1,26 @@
+<?xml version='1.0'?>
+
+<launch>
+    <!-- Input Arguments -->
+    <arg name="traj_topic_name" default="/trajectory" />
+    <arg name="steering_topic_name" default="/SteeringAngle" />
+    <arg name="velocity_topic_name" default="/cmd_vel" />
+    <arg name="lookahead" default="1.0" />
+    <arg name="wheelbase" default="2.269" />
+    <arg name="rear_to_cg" default="1.18" />
+    <arg name="sample_time" default="0.025" />
+
+    <!-- Launch Node -->
+    <node name="open_loop_controller" pkg="vehicle_control_pkg" type="open_loop_controller" output="screen">
+        
+        <!-- Input Parameters -->
+        <param name="traj_topic_name" value="$(arg traj_topic_name)" />
+        <param name="steering_topic_name" value="$(arg steering_topic_name)" />
+        <param name="velocity_topic_name" value="$(arg velocity_topic_name)" />
+        <param name="lookahead" value="$(arg lookahead)" />
+        <param name="wheelbase" value="$(arg wheelbase)" />
+        <param name="rear_to_cg" value="$(arg rear_to_cg)" />
+        <param name="sample_time" value="$(arg sample_time)" />
+    </node>
+
+</launch>
