@@ -2,10 +2,12 @@
 
 <launch>
     <!-- Input Arguments -->
-    <arg name="traj_topic_name" default="/trajectory" />
+    <arg name="traj_topic_name" default="/path_planner/trajectory" />
     <arg name="steering_topic_name" default="/SteeringAngle" />
     <arg name="velocity_topic_name" default="/cmd_vel" />
-    <arg name="lookahead" default="1.0" />
+    <arg name="traj_time_scale_factor" default="1.68" />
+    <arg name="velocity_max" default="33.33" />
+    <arg name="lookahead" default="0.0" />
     <arg name="wheelbase" default="2.269" />
     <arg name="rear_to_cg" default="1.18" />
     <arg name="sample_time" default="0.025" />
@@ -17,6 +19,8 @@
         <param name="traj_topic_name" value="$(arg traj_topic_name)" />
         <param name="steering_topic_name" value="$(arg steering_topic_name)" />
         <param name="velocity_topic_name" value="$(arg velocity_topic_name)" />
+        <param name="traj_time_scale_factor" value="$(arg traj_time_scale_factor)" />
+        <param name="velocity_max" value="$(arg velocity_max)" />
         <param name="lookahead" value="$(arg lookahead)" />
         <param name="wheelbase" value="$(arg wheelbase)" />
         <param name="rear_to_cg" value="$(arg rear_to_cg)" />

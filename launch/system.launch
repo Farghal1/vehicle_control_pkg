@@ -1,0 +1,10 @@
+<?xml version='1.0'?>
+
+<launch>
+    <!-- Include Path Planning Package -->
+    <include file="$(find path_planning_pkg)/launch/path_planner.launch" />
+
+    <!-- Include Vehicle Control Package -->
+    <include file="$(find vehicle_control_pkg)/launch/vehicle_control.launch" />
+
+</launch>

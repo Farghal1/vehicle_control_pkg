@@ -24,12 +24,51 @@ class Open_Loop_Controller
     // Constructor and public methods
     Open_Loop_Controller(ros::NodeHandle &nh);
     void callback_trajectory(const std_msgs::Float32MultiArray::ConstPtr &msg);
-    void update_control_input(double &steering, double &velocity);
-    void publish_msgs(const double steering, const double velocity) const;
+    void update_control_input();
+    void update_control_input_new();
+    void publish_msgs() const;
     double get_sample_time();
 
     private:
     // Private methods
+    void generate_time_steps(uint32_t traj_length)
+    {
+        // Generate time steps assuming constant acceleration between points
+        float delta_x, delta_y, euclid_dist, accel;
+        _traj_time[0] = 0.0f;     
+        for (uint32_t i = 1; i < traj_length; i++)
+        {
+            delta_x = _traj_x[i] - _traj_x[i-1];
+            delta_y = _traj_y[i] - _traj_y[i-1];
+            euclid_dist = sqrtf(delta_x * delta_x + delta_y * delta_y);
+            _traj_time[i] = _traj_time[i-1] + _traj_time_scale_factor * (2.0f * euclid_dist)/(_traj_vel[i] + _traj_vel[i-1]);
+        }
+        ROS_INFO("Trajectory Time: %.4f", _traj_time[traj_length-1]);
+    }
+
+    bool find_next_point(const float elapsed_time)
+    {
+        // Brute force search
+        uint32_t traj_length = _traj_x.size();
+        if (__builtin_expect(traj_length != 0, true))
+        {
+            for (uint32_t i = _traj_prev_index; i < traj_length; i++)
+            {
+                if (_traj_time[i] > elapsed_time)
+                {
+                    _traj_prev_index = i-1;
+                    return true;
+                }
+            }
+            _traj_prev_index = traj_length;
+            return false;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
     void update_pose()
     {
         double beta = atan2(_rear_to_cg * tan(_steering), _wheelbase);
@@ -56,16 +95,16 @@ class Open_Loop_Controller
         uint32_t traj_length = _traj_x.size();
         if (__builtin_expect(traj_length != 0, true))
         {
-            double min_dist = std::numeric_limits<double>::infinity();
-            double min_dist_lookahead = std::numeric_limits<double>::infinity();
+            float min_dist = std::numeric_limits<float>::infinity();
+            float min_dist_lookahead = std::numeric_limits<float>::infinity();
             uint32_t nearest_neighbor, nearest_neighbor_lookahead;
-            double delta_x, delta_y, euclid_dist, euclid_dist_lookahead;
+            float delta_x, delta_y, euclid_dist, euclid_dist_lookahead;
             for (uint32_t i = 0; i < traj_length; i++)
             {
                 delta_x = _traj_x[i] - _pose_current(0);
                 delta_y = _traj_y[i] - _pose_current(1); 
-                euclid_dist = sqrt(delta_x * delta_x + delta_y * delta_y);
-                euclid_dist_lookahead = abs(euclid_dist - _lookahead);
+                euclid_dist = sqrtf(delta_x * delta_x + delta_y * delta_y);
+                euclid_dist_lookahead = fabs(euclid_dist - _lookahead);
 
                 if (euclid_dist < min_dist)
                 {
@@ -80,8 +119,8 @@ class Open_Loop_Controller
                 }
             }
 
-            curvature = _traj_kappa[nearest_neighbor_lookahead];
-            velocity = _traj_vel[nearest_neighbor];
+            curvature = static_cast<double>(_traj_kappa[nearest_neighbor_lookahead]);
+            velocity = static_cast<double>(_traj_vel[nearest_neighbor]);
         }
         else
         {
@@ -97,6 +136,10 @@ class Open_Loop_Controller
     vector<float> _traj_y;
     vector<float> _traj_kappa;
     vector<float> _traj_vel;
+    vector<float> _traj_time;
+    float _traj_time_scale_factor;
+    ros::Time _traj_start_time;
+    int32_t _traj_prev_index;
 
     // Pose (2D) related
     Vector3d _pose_current;
@@ -104,10 +147,11 @@ class Open_Loop_Controller
     // Control related
     double _steering;
     double _velocity;
-    double _lookahead;
+    double _velocity_max;
     double _wheelbase;
     double _rear_to_cg;
     double _sample_time;
+    float _lookahead;
 
     // ROS publishers and subscribers
     ros::Publisher _steering_pub;

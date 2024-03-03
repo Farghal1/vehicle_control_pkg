@@ -8,7 +8,9 @@ Open_Loop_Controller::Open_Loop_Controller(ros::NodeHandle &nh)
     nh.param("/open_loop_controller/traj_topic_name", traj_topic_name, std::string("/trajectory"));
     nh.param("/open_loop_controller/steering_topic_name", steering_topic_name, std::string("/steer"));
     nh.param("/open_loop_controller/velocity_topic_name", velocity_topic_name, std::string("/velocity"));
-    nh.param("/open_loop_controller/lookahead", _lookahead, 0.5);
+    nh.param("/open_loop_controller/traj_time_scale_factor", _traj_time_scale_factor, 1.5f);
+    nh.param("/open_loop_controller/velocity_max", _velocity_max, 20.0);
+    nh.param("/open_loop_controller/lookahead", _lookahead, 0.5f);
     nh.param("/open_loop_controller/wheelbase", _wheelbase, 2.0);
     nh.param("/open_loop_controller/rear_to_cg", _rear_to_cg, 1.0);
     nh.param("/open_loop_controller/sample_time", _sample_time, 0.02);
@@ -17,12 +19,16 @@ Open_Loop_Controller::Open_Loop_Controller(ros::NodeHandle &nh)
     ROS_INFO("traj_topic_name: %s", traj_topic_name.c_str());
     ROS_INFO("steering_topic_name: %s", steering_topic_name.c_str());
     ROS_INFO("velocity_topic_name: %s", velocity_topic_name.c_str());
+    ROS_INFO("traj_time_scale_factor: %.4f", _traj_time_scale_factor);
+    ROS_INFO("velocity_max: %.4f", _velocity_max);
     ROS_INFO("lookahead: %.4f (m)", _lookahead);
     ROS_INFO("wheelbase: %.4f (m)", _wheelbase);
     ROS_INFO("rear_to_cg: %.4f (m)", _rear_to_cg);
     ROS_INFO("sample_time: %.4f (sec)", _sample_time);
 
     // Initialize class members (Non-ROS)
+    _traj_start_time = ros::Time::now();
+    _traj_prev_index = 0;
     _pose_current    = Vector3d::Zero();
     _steering        = 0.0;
     _velocity        = 0.0;
@@ -43,21 +49,27 @@ void Open_Loop_Controller::callback_trajectory(const std_msgs::Float32MultiArray
     }
 
     // Copy the components of the trajectory into the associated vectors
-    uint32_t traj_size = msg->layout.dim[0].size;
-    _traj_x.resize(traj_size);
-    _traj_y.resize(traj_size);
-    _traj_kappa.resize(traj_size);
-    _traj_vel.resize(traj_size);
-    for (uint32_t i = 0; i < traj_size; i++)
+    uint32_t traj_length = msg->layout.dim[0].size;
+    _traj_x.resize(traj_length);
+    _traj_y.resize(traj_length);
+    _traj_kappa.resize(traj_length);
+    _traj_vel.resize(traj_length);
+    for (uint32_t i = 0; i < traj_length; i++)
     {
         _traj_x[i] = msg->data[msg->layout.data_offset + i];
-        _traj_y[i] = msg->data[msg->layout.data_offset + traj_size + i];
-        _traj_kappa[i] = msg->data[msg->layout.data_offset + 2 * traj_size + i];
-        _traj_vel[i] = msg->data[msg->layout.data_offset + 3 * traj_size + i]; 
+        _traj_y[i] = msg->data[msg->layout.data_offset + traj_length + i];
+        _traj_kappa[i] = msg->data[msg->layout.data_offset + 2 * traj_length + i];
+        _traj_vel[i] = msg->data[msg->layout.data_offset + 3 * traj_length + i]; 
     }
+
+    // Reset previous trajectory and generate time steps for new trajectory
+    _traj_prev_index = 0;
+    _traj_time.resize(traj_length);
+    generate_time_steps(traj_length);
+    _traj_start_time = ros::Time::now();
 }
 
-void Open_Loop_Controller::update_control_input(double &steering, double &velocity)
+void Open_Loop_Controller::update_control_input()
 {
     // Update pose using motion model and prev inputs
     update_pose();
@@ -68,10 +80,47 @@ void Open_Loop_Controller::update_control_input(double &steering, double &veloci
 
     // Calculate new inputs based on curvature and planned velocity
     _steering = atan(_wheelbase * curvature);
-    _velocity = velocity_new;
+    _velocity = velocity_new; 
 }
 
-void Open_Loop_Controller::publish_msgs(const double steering, const double velocity) const
+void Open_Loop_Controller::update_control_input_new()
+{
+    // Make sure that subscriber (simulator) is up and running
+    if (_steering_pub.getNumSubscribers() > 0)
+    {
+        // Find the next point in trajectory based on elapsed time since trajectory start time
+        float elapsed_time = static_cast<float>((ros::Time::now() - _traj_start_time).toSec());
+        bool found_next = find_next_point(elapsed_time);
+
+        double curvature, velocity_new;
+        if (found_next)
+        {
+            // Interpolate to find current point
+            float elapsed_time_dt = ((elapsed_time - _traj_time[_traj_prev_index])/(_traj_time[_traj_prev_index+1] - _traj_time[_traj_prev_index]));
+            curvature = static_cast<double>(_traj_kappa[_traj_prev_index] + elapsed_time_dt
+                        * (_traj_kappa[_traj_prev_index+1] - _traj_kappa[_traj_prev_index]));
+            velocity_new = static_cast<double>(_traj_vel[_traj_prev_index] + elapsed_time_dt
+                        * (_traj_vel[_traj_prev_index+1] - _traj_vel[_traj_prev_index]));
+        }
+        else
+        {
+            curvature = 0.0;
+            velocity_new = 0.0;
+        }
+
+        // Calculate new inputs based on curvature and planned velocity
+        _steering = atan(_wheelbase * curvature);
+        _velocity = velocity_new;
+    }
+    else
+    {
+        // Reset trajectory start time and prev index
+        _traj_prev_index = 0;
+        _traj_start_time = ros::Time::now();
+    }
+}
+
+void Open_Loop_Controller::publish_msgs() const
 {
     // Declare msgs to be published
     std_msgs::Float64 steering_msg;
@@ -80,10 +129,10 @@ void Open_Loop_Controller::publish_msgs(const double steering, const double velo
 
     // Initialize the msgs
     steering_msg.data = _steering * (180.0/M_PI);
-    velocity_msg.data = _velocity;
+    velocity_msg.data = std::min(_velocity/_velocity_max, 1.0);
     pose_msg.header.stamp = ros::Time::now();
-    pose_msg.pose.position.x = _pose_current(0);
-    pose_msg.pose.position.y = _pose_current(1);
+    pose_msg.pose.position.x = -_pose_current(1);
+    pose_msg.pose.position.y = _pose_current(0);
 
     tf2::Quaternion orientation_tf2;
     orientation_tf2.setRPY(0.0, 0.0, _pose_current(2));
@@ -117,9 +166,9 @@ int main(int argc, char **argv)
     while (ros::ok())
     {
         ros::spinOnce();
-        double steering, velocity;
-        open_loop_controller.update_control_input(steering, velocity);
-        open_loop_controller.publish_msgs(steering, velocity);
+        // open_loop_controller.update_control_input();
+        open_loop_controller.update_control_input_new();
+        open_loop_controller.publish_msgs();
         loop_rate.sleep();
     }
 
