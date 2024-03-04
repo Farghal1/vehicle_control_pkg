@@ -125,27 +125,27 @@ void Open_Loop_Controller::publish_msgs() const
     // Declare msgs to be published
     std_msgs::Float64 steering_msg;
     std_msgs::Float64 velocity_msg;
-    geometry_msgs::PoseStamped pose_msg;
+    // geometry_msgs::PoseStamped pose_msg;
 
     // Initialize the msgs
     steering_msg.data = _steering * (180.0/M_PI);
     velocity_msg.data = std::min(_velocity/_velocity_max, 1.0);
-    pose_msg.header.stamp = ros::Time::now();
-    pose_msg.pose.position.x = -_pose_current(1);
-    pose_msg.pose.position.y = _pose_current(0);
+    // pose_msg.header.stamp = ros::Time::now();
+    // pose_msg.pose.position.x = -_pose_current(1);
+    // pose_msg.pose.position.y = _pose_current(0);
 
-    tf2::Quaternion orientation_tf2;
-    orientation_tf2.setRPY(0.0, 0.0, _pose_current(2));
-    orientation_tf2.normalize();
-    pose_msg.pose.orientation.x = orientation_tf2.x();
-    pose_msg.pose.orientation.y = orientation_tf2.y();
-    pose_msg.pose.orientation.z = orientation_tf2.z();
-    pose_msg.pose.orientation.w = orientation_tf2.w();
+    // tf2::Quaternion orientation_tf2;
+    // orientation_tf2.setRPY(0.0, 0.0, _pose_current(2));
+    // orientation_tf2.normalize();
+    // pose_msg.pose.orientation.x = orientation_tf2.x();
+    // pose_msg.pose.orientation.y = orientation_tf2.y();
+    // pose_msg.pose.orientation.z = orientation_tf2.z();
+    // pose_msg.pose.orientation.w = orientation_tf2.w();
 
     // Publish all msgs
     _steering_pub.publish(steering_msg);
     _velocity_pub.publish(velocity_msg);
-    _pose_pub.publish(pose_msg);
+    // _pose_pub.publish(pose_msg);
 }
 
 double Open_Loop_Controller::get_sample_time()

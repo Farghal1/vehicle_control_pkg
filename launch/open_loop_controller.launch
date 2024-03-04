@@ -5,12 +5,13 @@
     <arg name="traj_topic_name" default="/path_planner/trajectory" />
     <arg name="steering_topic_name" default="/SteeringAngle" />
     <arg name="velocity_topic_name" default="/cmd_vel" />
-    <arg name="traj_time_scale_factor" default="1.68" />
+    <arg name="traj_time_scale_factor" default="1.62" />
+    <!-- <arg name="traj_time_scale_factor" default="1.68" /> -->
     <arg name="velocity_max" default="33.33" />
     <arg name="lookahead" default="0.0" />
     <arg name="wheelbase" default="2.269" />
     <arg name="rear_to_cg" default="1.18" />
-    <arg name="sample_time" default="0.025" />
+    <arg name="sample_time" default="0.01" />
 
     <!-- Launch Node -->
     <node name="open_loop_controller" pkg="vehicle_control_pkg" type="open_loop_controller" output="screen">

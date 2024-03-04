@@ -34,14 +34,15 @@ class Open_Loop_Controller
     void generate_time_steps(uint32_t traj_length)
     {
         // Generate time steps assuming constant acceleration between points
-        float delta_x, delta_y, euclid_dist, accel;
+        float delta_x, delta_y, euclid_dist, avg_vel;
         _traj_time[0] = 0.0f;     
         for (uint32_t i = 1; i < traj_length; i++)
         {
             delta_x = _traj_x[i] - _traj_x[i-1];
             delta_y = _traj_y[i] - _traj_y[i-1];
             euclid_dist = sqrtf(delta_x * delta_x + delta_y * delta_y);
-            _traj_time[i] = _traj_time[i-1] + _traj_time_scale_factor * (2.0f * euclid_dist)/(_traj_vel[i] + _traj_vel[i-1]);
+            avg_vel = (_traj_vel[i] + _traj_vel[i-1])/2.0f;
+            _traj_time[i] = (fabs(avg_vel) > 1e-4f) ? _traj_time[i-1] + _traj_time_scale_factor * euclid_dist/avg_vel : _traj_time[i-1];
         }
         ROS_INFO("Trajectory Time: %.4f", _traj_time[traj_length-1]);
     }
