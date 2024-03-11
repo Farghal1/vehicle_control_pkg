@@ -10,7 +10,7 @@
     <arg name="velocity_max" default="33.33" />
     <arg name="velocity_reverse_max" default="4.0" />
     <arg name="velocity_incr" default="0.5" />
-    <arg name="sample_time" default="0.2" />
+    <arg name="sample_time" default="0.1" />
 
     <!-- Launch Node -->
     <node name="teleop_keyboard_controller" pkg="vehicle_control_pkg" type="teleop_keyboard_controller" output="screen">

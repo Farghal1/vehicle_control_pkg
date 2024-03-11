@@ -6,7 +6,7 @@
     <arg name="steering_topic_name" default="/SteeringAngle" />
     <arg name="throttle_topic_name" default="/cmd_vel" />
     <!-- <arg name="traj_time_scale_factor" default="1.025" /> -->
-    <arg name="traj_time_scale_factor" default="1.62" />
+    <arg name="traj_time_scale_factor" default="1.65" />
     <arg name="velocity_max" default="33.33" />
     <arg name="lookahead" default="0.0" />
     <arg name="wheelbase" default="2.269" />

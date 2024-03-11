@@ -9,7 +9,7 @@
 
     <!-- Include Vehicle Control Package -->
     <include file="$(find vehicle_control_pkg)/launch/vehicle_control.launch" >
-        <arg name="controller_type" value="$(arg controller_type)" />
+        <arg name="controller_type" value="$(arg controller_type)" /> <!-- "teleop_keyboard" or "open_loop"-->
     </include>
 
 </launch>
