@@ -4,9 +4,9 @@
     <!-- Input Arguments -->
     <arg name="traj_topic_name" default="/path_planner/trajectory" />
     <arg name="steering_topic_name" default="/SteeringAngle" />
-    <arg name="velocity_topic_name" default="/cmd_vel" />
+    <arg name="throttle_topic_name" default="/cmd_vel" />
+    <!-- <arg name="traj_time_scale_factor" default="1.025" /> -->
     <arg name="traj_time_scale_factor" default="1.62" />
-    <!-- <arg name="traj_time_scale_factor" default="1.68" /> -->
     <arg name="velocity_max" default="33.33" />
     <arg name="lookahead" default="0.0" />
     <arg name="wheelbase" default="2.269" />
@@ -19,7 +19,7 @@
         <!-- Input Parameters -->
         <param name="traj_topic_name" value="$(arg traj_topic_name)" />
         <param name="steering_topic_name" value="$(arg steering_topic_name)" />
-        <param name="velocity_topic_name" value="$(arg velocity_topic_name)" />
+        <param name="throttle_topic_name" value="$(arg throttle_topic_name)" />
         <param name="traj_time_scale_factor" value="$(arg traj_time_scale_factor)" />
         <param name="velocity_max" value="$(arg velocity_max)" />
         <param name="lookahead" value="$(arg lookahead)" />

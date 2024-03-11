@@ -4,10 +4,10 @@
 Open_Loop_Controller::Open_Loop_Controller(ros::NodeHandle &nh)
 {
     // Load in parameters from the ROS parameter server
-    std::string traj_topic_name, steering_topic_name, velocity_topic_name;
+    std::string traj_topic_name, steering_topic_name, throttle_topic_name;
     nh.param("/open_loop_controller/traj_topic_name", traj_topic_name, std::string("/trajectory"));
     nh.param("/open_loop_controller/steering_topic_name", steering_topic_name, std::string("/steer"));
-    nh.param("/open_loop_controller/velocity_topic_name", velocity_topic_name, std::string("/velocity"));
+    nh.param("/open_loop_controller/throttle_topic_name", throttle_topic_name, std::string("/throttle"));
     nh.param("/open_loop_controller/traj_time_scale_factor", _traj_time_scale_factor, 1.5f);
     nh.param("/open_loop_controller/velocity_max", _velocity_max, 20.0);
     nh.param("/open_loop_controller/lookahead", _lookahead, 0.5f);
@@ -18,7 +18,7 @@ Open_Loop_Controller::Open_Loop_Controller(ros::NodeHandle &nh)
     // Report the values of all parameters
     ROS_INFO("traj_topic_name: %s", traj_topic_name.c_str());
     ROS_INFO("steering_topic_name: %s", steering_topic_name.c_str());
-    ROS_INFO("velocity_topic_name: %s", velocity_topic_name.c_str());
+    ROS_INFO("throttle_topic_name: %s", throttle_topic_name.c_str());
     ROS_INFO("traj_time_scale_factor: %.4f", _traj_time_scale_factor);
     ROS_INFO("velocity_max: %.4f", _velocity_max);
     ROS_INFO("lookahead: %.4f (m)", _lookahead);
@@ -35,7 +35,7 @@ Open_Loop_Controller::Open_Loop_Controller(ros::NodeHandle &nh)
 
     // Initialize publishers and subscribers
     _steering_pub   = nh.advertise<std_msgs::Float64>(steering_topic_name, 0, true);
-    _velocity_pub   = nh.advertise<std_msgs::Float64>(velocity_topic_name, 0, true);
+    _throttle_pub   = nh.advertise<std_msgs::Float64>(throttle_topic_name, 0, true);
     _pose_pub       = nh.advertise<geometry_msgs::PoseStamped>("/open_loop_controller/pose", 1, true);
     _traj_sub       = nh.subscribe(traj_topic_name, 1, &Open_Loop_Controller::callback_trajectory, this);
 }
@@ -124,12 +124,12 @@ void Open_Loop_Controller::publish_msgs() const
 {
     // Declare msgs to be published
     std_msgs::Float64 steering_msg;
-    std_msgs::Float64 velocity_msg;
+    std_msgs::Float64 throttle_msg;
     // geometry_msgs::PoseStamped pose_msg;
 
     // Initialize the msgs
     steering_msg.data = _steering * (180.0/M_PI);
-    velocity_msg.data = std::min(_velocity/_velocity_max, 1.0);
+    throttle_msg.data = std::min(_velocity/_velocity_max, 1.0);
     // pose_msg.header.stamp = ros::Time::now();
     // pose_msg.pose.position.x = -_pose_current(1);
     // pose_msg.pose.position.y = _pose_current(0);
@@ -144,11 +144,11 @@ void Open_Loop_Controller::publish_msgs() const
 
     // Publish all msgs
     _steering_pub.publish(steering_msg);
-    _velocity_pub.publish(velocity_msg);
+    _throttle_pub.publish(throttle_msg);
     // _pose_pub.publish(pose_msg);
 }
 
-double Open_Loop_Controller::get_sample_time()
+double Open_Loop_Controller::get_sample_time() const
 {
     return _sample_time;
 }

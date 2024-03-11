@@ -139,6 +139,10 @@ add_executable(open_loop_controller src/open_loop_controller.cpp)
 target_link_libraries(open_loop_controller ${catkin_LIBRARIES} ${EIGEN3_LIBRARIES})
 add_dependencies(open_loop_controller vehicle_control_pkg_generate_messages_cpp)
 
+add_executable(teleop_keyboard_controller src/teleop_keyboard_controller.cpp)
+target_link_libraries(teleop_keyboard_controller ${catkin_LIBRARIES})
+add_dependencies(teleop_keyboard_controller vehicle_control_pkg_generate_messages_cpp)
+
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure

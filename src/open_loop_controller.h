@@ -27,7 +27,7 @@ class Open_Loop_Controller
     void update_control_input();
     void update_control_input_new();
     void publish_msgs() const;
-    double get_sample_time();
+    double get_sample_time() const;
 
     private:
     // Private methods
@@ -156,7 +156,7 @@ class Open_Loop_Controller
 
     // ROS publishers and subscribers
     ros::Publisher _steering_pub;
-    ros::Publisher _velocity_pub;
+    ros::Publisher _throttle_pub;
     ros::Publisher _pose_pub;
     ros::Subscriber _traj_sub;
 };
