@@ -3,7 +3,8 @@
 <launch>
     <!-- Input Arguments -->
     <arg name="controller_type" default="teleop_keyboard" />
-
+    <param name="controller_type" value="$(arg controller_type)" />
+    
     <!-- Include Path Planning Package -->
     <include file="$(find path_planning_pkg)/launch/path_planner.launch" />
 
