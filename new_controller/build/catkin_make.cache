@@ -1,2 +1,0 @@
-ackermann_msgs:path_planning_pkg:vehicle_control_pkg
--DCATKIN_DEVEL_PREFIX=/home/salma/new_controller/devel -DCMAKE_INSTALL_PREFIX=/home/salma/new_controller/install -G Unix Makefiles

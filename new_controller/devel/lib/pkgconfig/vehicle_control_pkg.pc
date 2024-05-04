@@ -1,8 +1,0 @@
-prefix=/home/salma/new_controller/devel
-
-Name: vehicle_control_pkg
-Description: Description of vehicle_control_pkg
-Version: 0.0.0
-Cflags: -I/home/salma/new_controller/src/vehicle_control_pkg/include
-Libs: -L${prefix}/lib -lvehicle_control_pkg
-Requires: ackermann_msgs geometry_msgs roscpp rospy sensor_msgs std_msgs std_srvs message_runtime
