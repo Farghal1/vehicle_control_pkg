@@ -2,7 +2,7 @@
 
 <launch>
     <!-- Input Arguments -->
-    <arg name="controller_type" default="teleop_keyboard" /> <!-- "teleop_keyboard" or "open_loop"-->
+    <arg name="controller_type" default="stanley" /> <!-- "teleop_keyboard" or "open_loop or "stanley"-->
     <arg name="traj_topic_name" default="/path_planner/trajectory" />
     <arg name="steering_topic_name" default="/SteeringAngle" />
     <arg name="throttle_topic_name" default="/cmd_vel" />
@@ -26,6 +26,14 @@
         <arg name="traj_topic_name" value="$(arg traj_topic_name)" />
         <arg name="steering_topic_name" value="$(arg steering_topic_name)" />
         <arg name="throttle_topic_name" value="$(arg throttle_topic_name)" />
+        <arg name="velocity_max" value="$(arg velocity_max)" />
+    </include>
+
+    <!-- Launch Stanley Controller -->
+    <include file="$(find vehicle_control_pkg)/launch/stanley_control.launch" if="$(eval controller_type == 'stanley')">
+        <arg name="traj_topic_name" value="$(arg traj_topic_name)" />
+        <arg name="steering_topic_name" value="$(arg steering_topic_name)" />
+        <arg name="velocity_topic_name" value="$(arg throttle_topic_name)" />
         <arg name="velocity_max" value="$(arg velocity_max)" />
     </include>
 

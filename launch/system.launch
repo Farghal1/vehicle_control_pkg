@@ -2,15 +2,16 @@
 
 <launch>
     <!-- Input Arguments -->
-    <arg name="controller_type" default="teleop_keyboard" />
-    <param name="controller_type" value="$(arg controller_type)" />
-    
+    <arg name="controller_type" default="stanley" />
+    <arg name="path_type" default="str" /> <!-- Type of path: 'straight', 'circular', 'lane_change', 'infinity' -->
+
     <!-- Include Path Planning Package -->
-    <include file="$(find path_planning_pkg)/launch/path_planner.launch" />
+    <include file="$(find path_planning_pkg)/launch/path_planner.launch" >
+    </include>
 
     <!-- Include Vehicle Control Package -->
     <include file="$(find vehicle_control_pkg)/launch/vehicle_control.launch" >
-        <arg name="controller_type" value="$(arg controller_type)" /> <!-- "teleop_keyboard" or "open_loop"-->
+        <arg name="controller_type" value="$(arg controller_type)" /> <!-- "teleop_keyboard" or "open_loop" or "stanley"-->
     </include>
-
+    
 </launch>
