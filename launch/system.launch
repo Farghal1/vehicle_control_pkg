@@ -3,10 +3,11 @@
 <launch>
     <!-- Input Arguments -->
     <arg name="controller_type" default="stanley" />
-    <arg name="path_type" default="str" /> <!-- Type of path: 'straight', 'circular', 'lane_change', 'infinity' -->
+    <arg name="path_type" default="circular" /> <!-- Type of path: 'straight', 'circular', 'lane_change', 'infinity' -->
 
     <!-- Include Path Planning Package -->
     <include file="$(find path_planning_pkg)/launch/path_planner.launch" >
+        <arg name="path_type" value="$(arg path_type)" />
     </include>
 
     <!-- Include Vehicle Control Package -->

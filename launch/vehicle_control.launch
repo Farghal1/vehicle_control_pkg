@@ -10,6 +10,8 @@
     <arg name="steering_max" default="0.5236" />
     <arg name="velocity_max" default="33.33" />
     <arg name="velocity_reverse_max" default="2.0" />
+    <arg name="wheelbase" default="2.269" />
+    <arg name="rear_to_cg" default="1.1345" />
 
     <!-- Launch Teleop Keyboard Controller -->
     <include file="$(find vehicle_control_pkg)/launch/teleop_keyboard_controller.launch" if="$(eval controller_type == 'teleop_keyboard')">
@@ -30,11 +32,14 @@
     </include>
 
     <!-- Launch Stanley Controller -->
-    <include file="$(find vehicle_control_pkg)/launch/stanley_control.launch" if="$(eval controller_type == 'stanley')">
+    <include file="$(find vehicle_control_pkg)/launch/stanley_controller.launch" if="$(eval controller_type == 'stanley')">
         <arg name="traj_topic_name" value="$(arg traj_topic_name)" />
         <arg name="steering_topic_name" value="$(arg steering_topic_name)" />
         <arg name="velocity_topic_name" value="$(arg throttle_topic_name)" />
+        <arg name="steering_max" value="$(arg steering_max)" />
         <arg name="velocity_max" value="$(arg velocity_max)" />
+        <arg name="wheelbase" value="$(arg wheelbase)" />
+        <arg name="rear_to_cg" value="$(arg rear_to_cg)" />
     </include>
 
 </launch>
