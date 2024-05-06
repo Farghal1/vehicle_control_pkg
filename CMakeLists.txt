@@ -8,7 +8,6 @@ add_compile_options(-std=c++11)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  ackermann_msgs
   geometry_msgs
   roscpp
   rospy
@@ -76,7 +75,6 @@ find_package(Eigen3 REQUIRED)
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
   DEPENDENCIES
-  ackermann_msgs
   geometry_msgs
   sensor_msgs
   std_msgs
@@ -114,7 +112,7 @@ generate_messages(
 catkin_package(
  INCLUDE_DIRS include
  LIBRARIES vehicle_control_pkg
- CATKIN_DEPENDS ackermann_msgs geometry_msgs roscpp rospy sensor_msgs std_msgs std_srvs message_runtime
+ CATKIN_DEPENDS geometry_msgs roscpp rospy sensor_msgs std_msgs std_srvs message_runtime
 )
 
 ###########

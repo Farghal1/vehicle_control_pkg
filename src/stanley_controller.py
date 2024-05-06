@@ -2,9 +2,7 @@
 
 import rospy
 from std_msgs.msg import Float64
-from geometry_msgs.msg import PoseStamped,Quaternion
 from std_msgs.msg import Float32MultiArray
-import tf.transformations
 import numpy as np
 from nav_msgs.msg import Odometry
 from tf.transformations import euler_from_quaternion
@@ -19,9 +17,7 @@ class StanleyController:
         traj_topic_name = rospy.get_param('~traj_topic_name', '/path_planner/trajectory')
         pose_topic_name = rospy.get_param('~pose_topic_name', '/odom')
         steering_topic_name = rospy.get_param('~steering_topic_name', '/steer')
-        velocity_topic_name = rospy.get_param('~velocity_topic_name', '/velocity')
         self.max_steer = rospy.get_param('~steering_max', np.deg2rad(45))
-        self.velocity_max = rospy.get_param('~velocity_max', 20.0)
         self.wheelbase = rospy.get_param('~wheelbase', 2.0)
         self.rear_to_cg = rospy.get_param('~rear_to_cg', 1.0)
 
@@ -29,9 +25,7 @@ class StanleyController:
         rospy.loginfo("traj_topic_name: %s", traj_topic_name)
         rospy.loginfo("pose_topic_name: %s", pose_topic_name)
         rospy.loginfo("steering_topic_name: %s", steering_topic_name)
-        rospy.loginfo("velocity_topic_name: %s", velocity_topic_name)
         rospy.loginfo("steering_max: %.4f (deg)", np.rad2deg(self.max_steer))
-        rospy.loginfo("velocity_max: %.4f (m/s)", self.velocity_max)
         rospy.loginfo("wheelbase: %.4f (m)", self.wheelbase)
         rospy.loginfo("rear_to_cg: %.4f (m)", self.rear_to_cg)
         rospy.loginfo("\n\n")
@@ -53,15 +47,14 @@ class StanleyController:
         self.pose_current = np.zeros(3)
         self.velocity_current = 0.0
         self.steering_cmd = 0.0
-        self.velocity_cmd = 0.0
 
+        # Initialize ROS publishers and subscribers
         self.steering_pub = rospy.Publisher(steering_topic_name, Float64, queue_size=1)
-        self.velocity_pub = rospy.Publisher(velocity_topic_name, Float64, queue_size=1)
-        self.traj_sub = rospy.Subscriber(traj_topic_name, Float32MultiArray, self.callback_trajectory)
+        self.traj_sub = rospy.Subscriber(traj_topic_name, Float32MultiArray, self.trajectory_callback)
         self.pose_sub = rospy.Subscriber(pose_topic_name, Odometry, self.odometry_callback)
     
 
-    def callback_trajectory(self, msg):
+    def trajectory_callback(self, msg):
         # Ensure the message length is divisible by 4 for x, y, kappa, and vel
         if len(msg.data) % 4 != 0:
             rospy.loginfo("Received trajectory data is not correctly formatted")
@@ -81,10 +74,6 @@ class StanleyController:
 
 
     def odometry_callback(self,msg):
-        # Extract position
-        position_x = msg.pose.pose.position.y+self.rear_to_cg* np.cos(self.pose_current[2])
-        position_y = -msg.pose.pose.position.x+self.rear_to_cg* np.sin(self.pose_current[2])
-
         # Extract orientation (quaternion)
         quaternion = (
             msg.pose.pose.orientation.x,
@@ -93,6 +82,10 @@ class StanleyController:
             msg.pose.pose.orientation.w
         )
         _, _, yaw = euler_from_quaternion(quaternion)
+
+        # Extract position
+        position_x = msg.pose.pose.position.y+self.rear_to_cg* np.cos(yaw)
+        position_y = -msg.pose.pose.position.x+self.rear_to_cg* np.sin(yaw)
 
         # Set current pose and velocity
         self.pose_current = np.array([position_x, position_y, yaw])
@@ -106,17 +99,13 @@ class StanleyController:
 
     def publish_msgs(self):
         steering_msg = Float64()
-        velocity_msg = Float64()
 
         # Initialize the msgs
         steering_msg.data = np.rad2deg(self.steering_cmd)
-        velocity_msg.data = np.minimum(self.velocity_cmd / self.velocity_max, 1.0)
 
         # Publish the msgs
         self.steering_pub.publish(steering_msg)
-        self.velocity_pub.publish(velocity_msg)
         # rospy.loginfo("steering: %.4f",steering_msg.data)
-        # rospy.loginfo("velocity: %.4f",velocity_msg.data)
     
 
     def normalizeAngle(self, angle):
@@ -163,13 +152,10 @@ class StanleyController:
                 dy_target = dy[closest_index - 1] + (dy[closest_index] - dy[closest_index - 1]) * delta_prog
                 heading_target = self.traj_headings[closest_index - 1] + (self.traj_headings[closest_index] - 
                                                                           self.traj_headings[closest_index - 1]) * delta_prog
-                velocity_target = self.traj_vel[closest_index - 1] + (self.traj_vel[closest_index] - 
-                                                                      self.traj_vel[closest_index - 1]) * delta_prog
             else:
                 dx_target = dx[closest_index]
                 dy_target = dy[closest_index]
                 heading_target = self.traj_headings[closest_index]       
-                velocity_target = self.traj_vel[closest_index]
 
             # Calculate the heading error
             vehicle_heading = self.pose_current[2] 
@@ -189,17 +175,8 @@ class StanleyController:
             Kp = 1 # Proportional gain
             steering = Kp * heading_error + np.arctan2((self.k * cross_track_error), (self.k_soft + self.velocity_current))
 
-            # Check if trajectory has been completed
-            if (closest_index >= self.closest_index_old):
-                self.closest_index_old = closest_index
-                velocity_cmd = velocity_target
-            else:
-                velocity_cmd = 0.0
-                print("Trajectory complete") 
-
-            # Calculate new inputs based on steering and planned velocity
+            # Calculate new inputs based on steering and planned
             self.steering_cmd = np.clip(steering, -self.max_steer, self.max_steer)
-            self.velocity_cmd = velocity_cmd
 
 
 if __name__ == '__main__':
