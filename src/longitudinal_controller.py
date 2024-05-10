@@ -21,6 +21,7 @@ class LongitudinalController:
         self.dec_long_max = rospy.get_param('~dec_long_max', 3.0)
         self.brake_dec_max = rospy.get_param('~brake_dec_max', 8.0)
         self.rear_to_cg = rospy.get_param('~rear_to_cg', 1.0)
+        self.forward_horizon = rospy.get_param('~forward_horizon', 0.1)
 
         # Report the values of all retreived parameters
         rospy.loginfo("traj_topic_name: %s", traj_topic_name)
@@ -32,6 +33,7 @@ class LongitudinalController:
         rospy.loginfo("dec_long_max: %.4f (m/s^2)", self.dec_long_max)
         rospy.loginfo("brake_dec_max: %.4f (m/s^2)", self.brake_dec_max)
         rospy.loginfo("rear_to_cg: %.4f (m)", self.rear_to_cg)
+        rospy.loginfo("forward_horizon: %.4f (sec)", self.forward_horizon)
         rospy.loginfo("\n\n")
 
         # Trajectory related
@@ -42,9 +44,9 @@ class LongitudinalController:
         self.closest_index_old = 0
 
         # Controller related
-        self.kp = 6.0
-        self.ki = 0.1
-        self.kd = 0.3
+        self.kp = 2.5
+        self.ki = 1.5
+        self.kd = 0.2
         self.cut_off = 100
         self.err = 0.0
         self.err_intg = 0.0
@@ -55,6 +57,7 @@ class LongitudinalController:
         # Initialize ROS publishers and subscribers
         self.velocity_pub = rospy.Publisher(velocity_topic_name, Float64, queue_size=1)
         self.brakes_pub = rospy.Publisher(brakes_topic_name, Float64, queue_size=1)
+        self.velocity_target_pub = rospy.Publisher("/longitudinal_controller/velocity_target", Float64, queue_size=1)
         self.err_pub = rospy.Publisher("/longitudinal_controller/vel_err", PointStamped, queue_size=1)
         self.traj_sub = rospy.Subscriber(traj_topic_name, Float32MultiArray, self.trajectory_callback)
         self.odom_sub = rospy.Subscriber(pose_topic_name, Odometry, self.odom_callback)
@@ -76,9 +79,9 @@ class LongitudinalController:
             )
             _, _, yaw = euler_from_quaternion(quaternion)
 
-            position_current = np.array([msg.pose.pose.position.y + self.rear_to_cg * np.cos(yaw), 
-                                         -msg.pose.pose.position.x + self.rear_to_cg * np.sin(yaw)])
             velocity_current = np.hypot(msg.twist.twist.linear.x, msg.twist.twist.linear.y)
+            position_current = np.array([msg.pose.pose.position.y + (self.rear_to_cg + velocity_current * self.forward_horizon) * np.cos(yaw), 
+                                         -msg.pose.pose.position.x + (self.rear_to_cg + velocity_current * self.forward_horizon) * np.sin(yaw)])
 
             # Perform acceleration test if needed (uncomment)
             # self.perform_accel_test(velocity_current, accel_cmd=2.0, brake_cmd=0.1, test_duration=20.0)
@@ -91,28 +94,34 @@ class LongitudinalController:
             accel_target = np.clip(accel_target, -self.dec_long_max, self.acc_long_max)
 
             # Publish actuation commands
-            self.publish_messages(velocity_current, velocity_target, accel_target, debug=True)
+            self.publish_messages(velocity_current, velocity_target, accel_target, debug=False)
 
     def get_target_vel_acc(self, position_current):
         # Find the next waypoint along the trajectory
         distance = np.hypot(self.traj_x - position_current[0], self.traj_y - position_current[1])
         closest_index = np.argmin(distance)
-        if (closest_index != (self.traj_x.shape[0]-1)) and \
-            ((closest_index == 0) or (distance[closest_index + 1] < distance[closest_index - 1])):
+
+        if (closest_index == (self.traj_x.shape[0] - 1)):
+            return self.traj_vel[-1], self.traj_acc[-1]
+        
+        if (closest_index == 0) or (distance[closest_index + 1] < distance[closest_index - 1]):
             # Closest waypoint is behind so increment by one 
             closest_index += 1
 
+        if ((closest_index - self.closest_index_old) > self.traj_x.shape[0]//3):
+            closest_index = self.closest_index_old
+
         # Check if trajectory has been completed
-        if (closest_index >= self.closest_index_old):
-            # Get target velocity and acceleration using linear interpolation
-            self.closest_index_old = closest_index
-            delta_dist = distance[closest_index - 1]/(distance[closest_index] + distance[closest_index - 1]) 
-            velocity_target = self.traj_vel[closest_index - 1] + (self.traj_vel[closest_index] - self.traj_vel[closest_index - 1]) * delta_dist
-            accel_target = self.traj_acc[closest_index - 1] + (self.traj_acc[closest_index] - self.traj_acc[closest_index - 1]) * delta_dist
-        else:
+        if (self.closest_index_old - closest_index) > self.traj_x.shape[0]//2:
             velocity_target = self.traj_vel[-1]
             accel_target = self.traj_acc[-1]
             print("Trajectory Complete")
+        else:
+            if closest_index >= self.closest_index_old:
+                self.closest_index_old = closest_index
+            delta_dist = distance[closest_index - 1]/(distance[closest_index] + distance[closest_index - 1])
+            velocity_target = self.traj_vel[closest_index - 1] + (self.traj_vel[closest_index] - self.traj_vel[closest_index - 1]) * delta_dist
+            accel_target = self.traj_acc[closest_index - 1] + (self.traj_acc[closest_index] - self.traj_acc[closest_index - 1]) * delta_dist
 
         return velocity_target, accel_target
     
@@ -133,16 +142,24 @@ class LongitudinalController:
     
     def publish_messages(self, velocity_current, velocity_target, accel_target, debug=False):
         # Calculate and publish new velocity or brake command based on acceleration
+        velocity_msg = Float64()
+        brakes_msg = Float64()
         if accel_target > 0:
             # Publish throttle message
-            velocity_msg = Float64()
             velocity_msg.data = np.clip((velocity_target + accel_target * self.sample_time)/self.velocity_max, -1.0, 1.0)
-            self.velocity_pub.publish(velocity_msg)
+            brakes_msg.data = 0.0
         else:
-            # Publish brakes message
-            brakes_msg = Float64()
+            # Publish throttle and brake messages
+            velocity_msg.data = 0.0
             brakes_msg.data = np.clip(-accel_target/self.brake_dec_max, 0.0, 1.0)
-            self.brakes_pub.publish(brakes_msg)
+        
+        self.velocity_pub.publish(velocity_msg)
+        self.brakes_pub.publish(brakes_msg)
+
+        # Publish target velocity for state estimator to use
+        velocity_target_msg = Float64()
+        velocity_target_msg.data = velocity_target
+        self.velocity_target_pub.publish(velocity_target_msg)
 
         # Publish velocity tracking error for tuning purposes
         if debug:
@@ -192,6 +209,7 @@ class LongitudinalController:
         self.traj_y = np.array(msg.data[traj_length:2*traj_length])
         self.traj_vel = np.array(msg.data[3*traj_length:])
         self.traj_acc = np.empty_like(self.traj_vel)
+        self.closest_index_old = 0
 
         # Reset controller non-const variables
         self.err = 0.0

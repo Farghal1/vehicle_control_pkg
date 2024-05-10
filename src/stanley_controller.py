@@ -37,11 +37,10 @@ class StanleyController:
         self.traj_vel = None
 
         # Controller related
-        self.k =0.5
+        self.k =1.0
         self.k_soft = 0.1
         self.k_yaw_rate = 0.0
         self.k_damp_steer = 0.0
-        self.closest_index_old = 0
 
         # Initialize class members (Non-ROS)
         self.pose_current = np.zeros(3)
@@ -126,7 +125,7 @@ class StanleyController:
             closest_index = masked_arr.argmin()
             angle=self.normalizeAngle(np.arctan2(-dy[closest_index],-dx[closest_index]) - self.pose_current[2])
             
-            if(angle<np.pi/2 and angle>-np.pi/2):
+            if((angle<np.pi/2 and angle>-np.pi/2) or (closest_index == (arr.shape[0] - 1))):
                 return closest_index
             else:
                 masked_arr.mask[closest_index] = True # Mask value in order to be ignored in next iteration

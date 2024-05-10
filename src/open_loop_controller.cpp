@@ -30,6 +30,7 @@ Open_Loop_Controller::Open_Loop_Controller(ros::NodeHandle &nh)
     _traj_start_time = ros::Time::now();
     _traj_prev_index = 0;
     _pose_current    = Vector3d::Zero();
+    _pose_current(0) = 1.1345;
     _steering        = 0.0;
     _velocity        = 0.0;
 
