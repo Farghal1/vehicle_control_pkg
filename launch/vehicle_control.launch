@@ -3,7 +3,7 @@
 <launch>
     <!-- Input Arguments -->
     <arg name="controller_type" default="stanley" /> <!-- "teleop_keyboard" or "open_loop or "stanley"-->
-    <arg name="traj_topic_name" default="/path_planner/trajectory" />
+    <arg name="traj_topic_name" default="/offline_planner/trajectory" />
     <arg name="pose_topic_name" default="/odom" />
     <arg name="steering_topic_name" default="/SteeringAngle" />
     <arg name="throttle_topic_name" default="/cmd_vel" />
@@ -44,10 +44,11 @@
 
     <!-- Launch Longitudinal Controller -->
     <include file="$(find vehicle_control_pkg)/launch/longitudinal_controller.launch" if="$(eval controller_type == 'stanley')">
-        <arg name="traj_topic_name" default="$(arg traj_topic_name)" />
+        <arg name="traj_topic_name" value="$(arg traj_topic_name)" />
         <arg name="pose_topic_name" value="$(arg pose_topic_name)" />
-        <arg name="velocity_topic_name" default="$(arg throttle_topic_name)" />
-        <arg name="brakes_topic_name" default="$(arg brakes_topic_name)" />
-        <arg name="velocity_max" default="$(arg velocity_max)" />
+        <arg name="velocity_topic_name" value="$(arg throttle_topic_name)" />
+        <arg name="brakes_topic_name" value="$(arg brakes_topic_name)" />
+        <arg name="velocity_max" value="$(arg velocity_max)" />
+        <arg name="rear_to_cg" value="$(arg rear_to_cg)" />
     </include>
 </launch>

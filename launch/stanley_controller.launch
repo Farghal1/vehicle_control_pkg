@@ -2,7 +2,7 @@
 
 <launch>
     <!-- Input Arguments -->
-    <arg name="traj_topic_name" default="/path_planner/trajectory" />
+    <arg name="traj_topic_name" default="/offline_planner/trajectory" />
     <arg name="pose_topic_name" default="/odom" />
     <arg name="steering_topic_name" default="/SteeringAngle" />
     <arg name="steering_max" default="0.5236" />

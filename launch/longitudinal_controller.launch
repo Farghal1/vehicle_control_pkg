@@ -2,7 +2,7 @@
 
 <launch>
     <!-- Input Arguments -->
-    <arg name="traj_topic_name" default="/path_planner/trajectory" />
+    <arg name="traj_topic_name" default="/offline_planner/trajectory" />
     <arg name="pose_topic_name" default="/odom" />
     <arg name="velocity_topic_name" default="/cmd_vel" />
     <arg name="brakes_topic_name" default="/brakes" />

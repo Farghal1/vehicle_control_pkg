@@ -89,7 +89,7 @@ class LongitudinalController:
             # Get the target velocity and acceleration based on elapsed time
             velocity_target, accel_target = self.get_target_vel_acc(position_current)
 
-            # Calculate the feedback acceleration using the PID control law then saturate accleration command
+            # Calculate the feedback acceleration using the PID control law then saturate acceleration command
             accel_target += self.run_pid_controller(velocity_current, velocity_target)
             accel_target = np.clip(accel_target, -self.dec_long_max, self.acc_long_max)
 
@@ -101,8 +101,10 @@ class LongitudinalController:
         distance = np.hypot(self.traj_x - position_current[0], self.traj_y - position_current[1])
         closest_index = np.argmin(distance)
 
-        if (closest_index == (self.traj_x.shape[0] - 1)):
+        if (closest_index == (self.traj_x.shape[0] - 1)) and (self.closest_index_old > self.traj_x.shape[0]//2):
             return self.traj_vel[-1], self.traj_acc[-1]
+        else:
+            closest_index = self.closest_index_old    
         
         if (closest_index == 0) or (distance[closest_index + 1] < distance[closest_index - 1]):
             # Closest waypoint is behind so increment by one 
@@ -122,7 +124,7 @@ class LongitudinalController:
             delta_dist = distance[closest_index - 1]/(distance[closest_index] + distance[closest_index - 1])
             velocity_target = self.traj_vel[closest_index - 1] + (self.traj_vel[closest_index] - self.traj_vel[closest_index - 1]) * delta_dist
             accel_target = self.traj_acc[closest_index - 1] + (self.traj_acc[closest_index] - self.traj_acc[closest_index - 1]) * delta_dist
-
+        
         return velocity_target, accel_target
     
     def run_pid_controller(self, velocity_current, velocity_target):
@@ -209,6 +211,7 @@ class LongitudinalController:
         self.traj_y = np.array(msg.data[traj_length:2*traj_length])
         self.traj_vel = np.array(msg.data[3*traj_length:])
         self.traj_acc = np.empty_like(self.traj_vel)
+        self.generate_acceleration()
         self.closest_index_old = 0
 
         # Reset controller non-const variables
@@ -216,26 +219,17 @@ class LongitudinalController:
         self.err_intg = 0.0
         self.err_dot = 0.0
 
-    def generate_time_steps(self, traj_x, traj_y):
+    def generate_acceleration(self):
         # Calculate the accumulated Euclidean distance to approximate the distance travelled
-        dx = np.diff(traj_x)
-        dy = np.diff(traj_y)
-        distance = np.empty_like(traj_x)
+        dx = np.diff(self.traj_x)
+        dy = np.diff(self.traj_y)
+        distance = np.empty_like(self.traj_x)
         distance[0] = 0.0
         distance[1:] = np.hypot(dx, dy)     
         
         # Calculate longitudinal accelerations and time steps
         self.traj_acc[:-1] = np.diff(np.power(self.traj_vel, 2))/(2 * distance[1:])
         self.traj_acc[-1] = 0.0
-        epsilon = 1e-3
-        self.traj_time[1:] = np.where(np.abs(self.traj_acc[:-1]) > epsilon, 
-                                      np.diff(self.traj_vel)/self.traj_acc[:-1], 
-                                      distance[1:]/self.traj_vel[:-1])
-        self.traj_time[0] = 0.0
-        self.traj_time = np.cumsum(self.traj_time)     
-                
-        rospy.loginfo("Trajectory Time: %.4f", self.traj_time[-1])
-
 
 if __name__ == '__main__':
     try:

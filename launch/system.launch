@@ -1,21 +1,37 @@
 <?xml version='1.0'?>
 
 <launch>
-    <!-- Input Arguments -->
+    <!-- Input Arguments - System Configuration -->
     <arg name="controller_type" default="stanley" /> <!-- "teleop_keyboard" or "open_loop" or "stanley"-->
+    <arg name="use_online_planner" default="false" />
     <arg name="path_type" default="infinity" /> <!-- Type of path: 'straight', 'circular', 'lane_change', 'infinity' -->
     <arg name="closed_loop" default="true" />
-    <!-- <arg name="pose_topic_name" default="/odom" /> -->
-    <arg name="pose_topic_name" default="/state_estimator/odometry" />
+
+    <!-- Input Arguments - External Topic Names -->
+    <arg name="pose_topic_name" default="/odom" />
+    <!-- <arg name="pose_topic_name" default="/state_estimator/odometry" /> -->
     <arg name="steering_topic_name" default="/SteeringAngle" />
     <arg name="throttle_topic_name" default="/cmd_vel" />
     <arg name="brakes_topic_name" default="/brakes" />
+
+    <!-- Input Arguments - Vehicle Parameters -->
+    <arg name="vehicle_length" default="2.6" />
+    <arg name="vehicle_width" default="1.6" />
     <arg name="wheelbase" default="2.269" />
+    <arg name="rear_to_cg" default="1.18" />
 
     <!-- Include Path Planning Package -->
-    <include file="$(find path_planning_pkg)/launch/path_planner.launch" >
+    <include file="$(find path_planning_pkg)/launch/planner.launch" >
+        <arg name="use_online_planner" value="$(arg use_online_planner)" />
         <arg name="path_type" value="$(arg path_type)" />
         <arg name="publish_heading" value="$(arg closed_loop)" />
+
+        <arg name="pose_topic_name" value="$(arg pose_topic_name)" />
+
+        <arg name="vehicle_length" value="$(arg vehicle_length)" />
+        <arg name="vehicle_width" value="$(arg vehicle_width)" />
+        <arg name="wheelbase" value="$(arg wheelbase)" />
+        <arg name="rear_to_cg" value="$(arg rear_to_cg)" />
     </include>
 
     <!-- Include State Estimation Package -->
@@ -32,6 +48,7 @@
         <arg name="throttle_topic_name" value="$(arg throttle_topic_name)" />
         <arg name="brakes_topic_name" value="$(arg brakes_topic_name)" />
         <arg name="wheelbase" value="$(arg wheelbase)" />
+        <arg name="rear_to_cg" value="$(arg rear_to_cg)" />
     </include>
     
 </launch>
