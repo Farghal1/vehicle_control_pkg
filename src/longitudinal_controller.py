@@ -44,9 +44,9 @@ class LongitudinalController:
         self.closest_index_old = 0
 
         # Controller related
-        self.kp = 2.5
-        self.ki = 1.5
-        self.kd = 0.2
+        self.kp = 1.5
+        self.ki = 5.0
+        self.kd = 0.005
         self.cut_off = 100
         self.err = 0.0
         self.err_intg = 0.0
@@ -94,37 +94,36 @@ class LongitudinalController:
             accel_target = np.clip(accel_target, -self.dec_long_max, self.acc_long_max)
 
             # Publish actuation commands
-            self.publish_messages(velocity_current, velocity_target, accel_target, debug=False)
+            self.publish_messages(velocity_current, velocity_target, accel_target, debug=True)
 
     def get_target_vel_acc(self, position_current):
         # Find the next waypoint along the trajectory
         distance = np.hypot(self.traj_x - position_current[0], self.traj_y - position_current[1])
         closest_index = np.argmin(distance)
-
-        if (closest_index == (self.traj_x.shape[0] - 1)) and (self.closest_index_old > self.traj_x.shape[0]//2):
-            return self.traj_vel[-1], self.traj_acc[-1]
-        else:
-            closest_index = self.closest_index_old    
-        
-        if (closest_index == 0) or (distance[closest_index + 1] < distance[closest_index - 1]):
-            # Closest waypoint is behind so increment by one 
-            closest_index += 1
-
+            
+        # Condition to handle self intersecting trajectories 
         if ((closest_index - self.closest_index_old) > self.traj_x.shape[0]//3):
             closest_index = self.closest_index_old
 
+        if (closest_index == 0) or ((closest_index != (self.traj_x.shape[0] - 1)) and \
+            distance[closest_index + 1] < distance[closest_index - 1]):
+            # Closest waypoint is behind so increment by one 
+            closest_index += 1
+
         # Check if trajectory has been completed
-        if (self.closest_index_old - closest_index) > self.traj_x.shape[0]//2:
+        closest_points_distance = np.hypot(self.traj_x[closest_index] - self.traj_x[closest_index - 1], 
+                                           self.traj_y[closest_index] - self.traj_y[closest_index - 1])
+        if ((self.closest_index_old - closest_index) > self.traj_x.shape[0]//2) or \
+            ((closest_index == (self.traj_x.shape[0] - 1)) and (distance[closest_index - 1] > closest_points_distance)):
             velocity_target = self.traj_vel[-1]
             accel_target = self.traj_acc[-1]
-            print("Trajectory Complete")
+            # print("Trajectory Complete")
         else:
-            if closest_index >= self.closest_index_old:
-                self.closest_index_old = closest_index
             delta_dist = distance[closest_index - 1]/(distance[closest_index] + distance[closest_index - 1])
             velocity_target = self.traj_vel[closest_index - 1] + (self.traj_vel[closest_index] - self.traj_vel[closest_index - 1]) * delta_dist
             accel_target = self.traj_acc[closest_index - 1] + (self.traj_acc[closest_index] - self.traj_acc[closest_index - 1]) * delta_dist
-        
+            self.closest_index_old = closest_index
+            
         return velocity_target, accel_target
     
     def run_pid_controller(self, velocity_current, velocity_target):

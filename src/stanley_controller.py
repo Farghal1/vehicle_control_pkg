@@ -37,7 +37,7 @@ class StanleyController:
         self.traj_vel = None
 
         # Controller related
-        self.k =1.0
+        self.k = 0.5
         self.k_soft = 0.1
         self.k_yaw_rate = 0.0
         self.k_damp_steer = 0.0

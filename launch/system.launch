@@ -5,7 +5,7 @@
     <arg name="controller_type" default="stanley" /> <!-- "teleop_keyboard" or "open_loop" or "stanley"-->
     <arg name="use_online_planner" default="false" />
     <arg name="path_type" default="infinity" /> <!-- Type of path: 'straight', 'circular', 'lane_change', 'infinity' -->
-    <arg name="closed_loop" default="true" />
+    <arg name="closed_loop" default="true" /> <!-- Redundent, could be removed in the future -->
 
     <!-- Input Arguments - External Topic Names -->
     <arg name="pose_topic_name" default="/odom" />
@@ -15,10 +15,10 @@
     <arg name="brakes_topic_name" default="/brakes" />
 
     <!-- Input Arguments - Vehicle Parameters -->
-    <arg name="vehicle_length" default="2.6" />
-    <arg name="vehicle_width" default="1.6" />
+    <arg name="vehicle_length" default="4.0" />
+    <arg name="vehicle_width" default="2.0" />
     <arg name="wheelbase" default="2.269" />
-    <arg name="rear_to_cg" default="1.18" />
+    <arg name="rear_to_cg" default="1.135" />
 
     <!-- Include Path Planning Package -->
     <include file="$(find path_planning_pkg)/launch/planner.launch" >
