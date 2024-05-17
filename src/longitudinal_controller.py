@@ -94,7 +94,7 @@ class LongitudinalController:
             accel_target = np.clip(accel_target, -self.dec_long_max, self.acc_long_max)
 
             # Publish actuation commands
-            self.publish_messages(velocity_current, velocity_target, accel_target, debug=True)
+            self.publish_messages(velocity_current, velocity_target, accel_target, debug=False)
 
     def get_target_vel_acc(self, position_current):
         # Find the next waypoint along the trajectory
