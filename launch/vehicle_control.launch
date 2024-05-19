@@ -13,7 +13,8 @@
     <arg name="velocity_max" default="33.33" />
     <arg name="velocity_reverse_max" default="2.0" />
     <arg name="wheelbase" default="2.269" />
-    <arg name="rear_to_cg" default="1.1345" />
+    <!-- <arg name="rear_to_cg" default="1.1345" /> -->
+    <arg name="rear_to_cg" default="0.0" />
 
     <!-- Launch Teleop Keyboard Controller -->
     <include file="$(find vehicle_control_pkg)/launch/teleop_keyboard_controller.launch" if="$(eval controller_type == 'teleop_keyboard')">
