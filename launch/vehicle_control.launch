@@ -3,12 +3,13 @@
 <launch>
     <!-- Input Arguments -->
     <arg name="controller_type" default="stanley" /> <!-- "teleop_keyboard" or "open_loop or "stanley"-->
-    <arg name="traj_topic_name" default="/offline_planner/trajectory" />
+    <!-- <arg name="traj_topic_name" default="/offline_planner/trajectory" /> -->
+    <arg name="traj_topic_name" default="/local_planner/trajectory" />
     <arg name="pose_topic_name" default="/odom" />
     <arg name="steering_topic_name" default="/SteeringAngle" />
     <arg name="throttle_topic_name" default="/cmd_vel" />
     <arg name="brakes_topic_name" default="/brakes" />
-    <arg name="steering_max" default="0.5236" />
+    <arg name="steering_max" default="0.6981317" />
     <arg name="velocity_max" default="33.33" />
     <arg name="velocity_reverse_max" default="2.0" />
     <arg name="wheelbase" default="2.269" />

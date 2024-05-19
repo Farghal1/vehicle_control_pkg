@@ -25,16 +25,16 @@
     <arg name="rear_to_cg" default="1.135" />
 
     <!-- Input Arguments - Camera Parameters -->
-    <arg name="prespective_angle_x" default="85" />    
+    <arg name="prespective_angle_x" default="80" />    
     <arg name="resolution_x" default="960" />
     <arg name="resolution_y" default="480" />
     <arg name="depth_max" default="30.0" />
 
     <!-- Include State Estimation Package -->
-    <include file="$(find autonomx_state_estimator)/launch/state_estimator.launch" >
+    <!-- <include file="$(find autonomx_state_estimator)/launch/state_estimator.launch" >
         <arg name="steering_topic_name" value="$(arg steering_topic_name)" />
         <arg name="wheelbase" value="$(arg wheelbase)" />
-    </include>
+    </include> -->
 
     <!-- Include Perception Package -->
     <include file="$(find perception_pkg)/launch/perception.launch" >

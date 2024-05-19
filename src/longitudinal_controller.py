@@ -214,9 +214,9 @@ class LongitudinalController:
         self.closest_index_old = 0
 
         # Reset controller non-const variables
-        self.err = 0.0
-        self.err_intg = 0.0
-        self.err_dot = 0.0
+        # self.err = 0.0
+        # self.err_intg = 0.0
+        # self.err_dot = 0.0
 
     def generate_acceleration(self):
         # Calculate the accumulated Euclidean distance to approximate the distance travelled
