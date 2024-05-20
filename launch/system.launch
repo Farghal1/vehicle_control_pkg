@@ -3,7 +3,7 @@
 <launch>
     <!-- Input Arguments - System Configuration -->
     <arg name="controller_type" default="stanley" /> <!-- "teleop_keyboard" or "open_loop" or "stanley"-->
-    <arg name="use_online_planner" default="false" />
+    <arg name="use_online_planner" default="true" />
     <arg name="path_type" default="infinity" /> <!-- Type of path: 'straight', 'circular', 'lane_change', 'infinity' -->
     <arg name="closed_loop" default="true" /> <!-- Redundent, could be removed in the future -->
     <arg name="use_depth" default="true" />

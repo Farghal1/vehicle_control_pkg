@@ -119,9 +119,11 @@ class LongitudinalController:
             accel_target = self.traj_acc[-1]
             # print("Trajectory Complete")
         else:
-            delta_dist = distance[closest_index - 1]/(distance[closest_index] + distance[closest_index - 1])
-            velocity_target = self.traj_vel[closest_index - 1] + (self.traj_vel[closest_index] - self.traj_vel[closest_index - 1]) * delta_dist
-            accel_target = self.traj_acc[closest_index - 1] + (self.traj_acc[closest_index] - self.traj_acc[closest_index - 1]) * delta_dist
+            # delta_dist = distance[closest_index - 1]/(distance[closest_index] + distance[closest_index - 1])
+            # velocity_target = self.traj_vel[closest_index - 1] + (self.traj_vel[closest_index] - self.traj_vel[closest_index - 1]) * delta_dist
+            # accel_target = self.traj_acc[closest_index - 1] + (self.traj_acc[closest_index] - self.traj_acc[closest_index - 1]) * delta_dist
+            velocity_target = self.traj_vel[closest_index]
+            accel_target = self.traj_acc[closest_index]
             self.closest_index_old = closest_index
             
         return velocity_target, accel_target
