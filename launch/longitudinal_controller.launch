@@ -7,8 +7,8 @@
     <arg name="velocity_topic_name" default="/cmd_vel" />
     <arg name="brakes_topic_name" default="/brakes" />
     <arg name="velocity_max" default="33.33" />
-    <arg name="acc_long_max" default="2.0" />
-    <arg name="dec_long_max" default="4.0" />
+    <arg name="acc_long_max" default="1.0" />
+    <arg name="dec_long_max" default="2.0" />
     <!-- <arg name="brake_dec_max" default="43.484" /> -->
     <arg name="brake_dec_max" default="40.0" />    
     <arg name="rear_to_cg" default="1.1345" />
