@@ -44,8 +44,8 @@ class LongitudinalController:
         self.closest_index_old = 0
 
         # Controller related
-        self.kp = 1.0
-        self.ki = 3.5
+        self.kp = 1.5
+        self.ki = 5.0
         self.kd = 0.005
         self.cut_off = 100
         self.err = 0.0
