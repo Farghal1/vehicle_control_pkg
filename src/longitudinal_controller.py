@@ -100,6 +100,9 @@ class LongitudinalController:
         # Find the next waypoint along the trajectory
         distance = np.hypot(self.traj_x - position_current[0], self.traj_y - position_current[1])
         closest_index = np.argmin(distance)
+
+        if closest_index == (self.traj_x.shape[0] - 1):
+            return self.traj_vel[closest_index], self.traj_acc[closest_index]
             
         # Condition to handle self intersecting trajectories 
         if ((closest_index - self.closest_index_old) > self.traj_x.shape[0]//3):
