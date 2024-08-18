@@ -80,7 +80,7 @@ The **vehicle_control_pkg** contains all nodes responsible for ensuring that the
 #### Node Parameters:
    * `traj_topic_name`: Name of the topic where the planned trajectory is published.
    * `pose_topic_name`: Name of the topic where the vehicle's current pose and twist are published.
-   * `steering_topic_name`: Name of the topic to publish calculated throttle inputs to, according to the vehicle model within the simulator.
+   * `steering_topic_name`: Name of the topic to publish calculated steering angles to, according to the vehicle model within the simulator.
    * `steering_max`: Maximum absolute steering angle in radians.
    * `wheelbase`: The length of the vehicle's wheelbase in meters.
    * `rear_to_cg`: The distace from the center of the rear-axle to the vehicle center of gravity along its longitudinal axis.
@@ -104,7 +104,7 @@ The **vehicle_control_pkg** contains all nodes responsible for ensuring that the
    * `forward_horizon`: A forward horizon in seconds according to which the vehicle's current pose will be propogated forward in time before calculating the control input.
 
 #### Known Issues and Possible Solutions:
-   * **Issue**: Controller is tough to tune due to the throttle being a velocity-controlled joint and brakes being force-controllerd; hence, having different responses.
+   * **Issue**: Controller is tough to tune due to the throttle being a velocity-controlled joint and brakes being force-controlled; hence, having different responses.
    * **Solution**: Tuning an independent set of gains for each control input and switching between the two based on the sign of the needed acceleration.
 
   
