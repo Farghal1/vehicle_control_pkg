@@ -122,11 +122,11 @@ class LongitudinalController:
             accel_target = self.traj_acc[-1]
             # print("Trajectory Complete")
         else:
-            # delta_dist = distance[closest_index - 1]/(distance[closest_index] + distance[closest_index - 1])
-            # velocity_target = self.traj_vel[closest_index - 1] + (self.traj_vel[closest_index] - self.traj_vel[closest_index - 1]) * delta_dist
-            # accel_target = self.traj_acc[closest_index - 1] + (self.traj_acc[closest_index] - self.traj_acc[closest_index - 1]) * delta_dist
-            velocity_target = self.traj_vel[closest_index]
-            accel_target = self.traj_acc[closest_index]
+            delta_dist = distance[closest_index - 1]/(distance[closest_index] + distance[closest_index - 1])
+            velocity_target = self.traj_vel[closest_index - 1] + (self.traj_vel[closest_index] - self.traj_vel[closest_index - 1]) * delta_dist
+            accel_target = self.traj_acc[closest_index - 1] + (self.traj_acc[closest_index] - self.traj_acc[closest_index - 1]) * delta_dist
+            # velocity_target = self.traj_vel[closest_index]
+            # accel_target = self.traj_acc[closest_index]
             self.closest_index_old = closest_index
             
         return velocity_target, accel_target
@@ -210,18 +210,19 @@ class LongitudinalController:
         # Calculate the length of each segment of the trajectory
         traj_length = len(msg.data) // 4
 
-        # Extract trajectory data from the message (only velocity needs to be stored)
-        self.traj_x = np.array(msg.data[:traj_length])
-        self.traj_y = np.array(msg.data[traj_length:2*traj_length])
-        self.traj_vel = np.array(msg.data[3*traj_length:])
-        self.traj_acc = np.empty_like(self.traj_vel)
-        self.generate_acceleration()
-        self.closest_index_old = 0
+        # Extract trajectory data from the message
+        if traj_length > 1:
+            self.traj_x = np.array(msg.data[:traj_length])
+            self.traj_y = np.array(msg.data[traj_length:2*traj_length])
+            self.traj_vel = np.array(msg.data[3*traj_length:])
+            self.traj_acc = np.empty_like(self.traj_vel)
+            self.generate_acceleration()
+            self.closest_index_old = 0
 
-        # Reset controller non-const variables
-        # self.err = 0.0
-        # self.err_intg = 0.0
-        # self.err_dot = 0.0
+            # Reset controller non-const variables
+            self.err = 0.0
+            self.err_intg = 0.0
+            self.err_dot = 0.0
 
     def generate_acceleration(self):
         # Calculate the accumulated Euclidean distance to approximate the distance travelled

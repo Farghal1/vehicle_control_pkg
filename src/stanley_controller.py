@@ -61,15 +61,16 @@ class StanleyController:
 
         # Calculate the length of each segment of the trajectory
         segment_length = len(msg.data) // 4
-        #print("segment length is",segment_length)
+        # print("segment length is",segment_length)
 
-        # Extract trajectory data from the message
-        self.traj_x = np.array(msg.data[:segment_length])
-        self.traj_y = np.array(msg.data[segment_length:2*segment_length])
-        self.traj_headings = np.array(msg.data[2*segment_length:3*segment_length])
-        self.traj_vel = np.array(msg.data[3*segment_length:])
-
-        #print("GOT THAT")
+        if segment_length > 1:
+            # Extract trajectory data from the message
+            self.traj_x = np.array(msg.data[:segment_length])
+            self.traj_y = np.array(msg.data[segment_length:2*segment_length])
+            self.traj_headings = np.array(msg.data[2*segment_length:3*segment_length])
+            self.traj_vel = np.array(msg.data[3*segment_length:])
+            
+            # print("GOT THAT")
 
 
     def odometry_callback(self,msg):
@@ -145,16 +146,16 @@ class StanleyController:
             # print("closest_index",closest_index)
 
             # Linear interpolate to get target point
-            # if closest_index != 0:
-            #     delta_prog = d[closest_index - 1]/(d[closest_index] + d[closest_index - 1])
-            #     dx_target = dx[closest_index - 1] + (dx[closest_index] - dx[closest_index - 1]) * delta_prog
-            #     dy_target = dy[closest_index - 1] + (dy[closest_index] - dy[closest_index - 1]) * delta_prog
-            #     heading_target = self.traj_headings[closest_index - 1] + (self.traj_headings[closest_index] - 
-            #                                                               self.traj_headings[closest_index - 1]) * delta_prog
-            # else:
-            dx_target = dx[closest_index]
-            dy_target = dy[closest_index]
-            heading_target = self.traj_headings[closest_index]       
+            if closest_index != 0:
+                delta_prog = d[closest_index - 1]/(d[closest_index] + d[closest_index - 1])
+                dx_target = dx[closest_index - 1] + (dx[closest_index] - dx[closest_index - 1]) * delta_prog
+                dy_target = dy[closest_index - 1] + (dy[closest_index] - dy[closest_index - 1]) * delta_prog
+                heading_target = self.traj_headings[closest_index - 1] + (self.traj_headings[closest_index] - 
+                                                                          self.traj_headings[closest_index - 1]) * delta_prog
+            else:
+                dx_target = dx[closest_index]
+                dy_target = dy[closest_index]
+                heading_target = self.traj_headings[closest_index]       
 
             # Calculate the heading error
             vehicle_heading = self.pose_current[2] 
